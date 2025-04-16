@@ -1,0 +1,26 @@
+# Official Python runtime as a parent image
+FROM python:3.13-alpine
+
+RUN apk update && apk add --no-cache curl
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy requirements 
+COPY requirements.txt /app/
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Expose port 8001 for Django
+EXPOSE 8001
+
+# Run migrations & start Django server
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set the entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
