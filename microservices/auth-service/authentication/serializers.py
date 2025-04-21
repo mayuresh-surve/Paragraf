@@ -14,7 +14,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ("id", "email", "password",
-                  "date_joined", "first_name", "last_name", "gender", "dob", "profile_pic_url", "bio")
+                  "date_joined", "first_name", "last_name")
 
     def create(self, validated_data):
         try:
@@ -24,3 +24,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             # This will return a 400 response with the error message
             raise serializers.ValidationError({"detail": str(e)})
         return user
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for returning user details (by ID or email).
+    """
+    class Meta:
+        model = CustomUser
+        fields = ("id", "email", "date_joined", "first_name",
+                  "last_name", "gender", "dob", "profile_pic_url", "bio")
+        read_only_fields = ("id", "email", "date_joined")

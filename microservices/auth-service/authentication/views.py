@@ -5,9 +5,11 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserRegistrationSerializer
+from .serializers import UserRegistrationSerializer, UserDetailSerializer
 from .throttles import RegistrationRateThrottle, LoginRateThrottle, RefreshTokenRateThrottle
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import CustomUser
 
 # Create your views here.
 class UserRegistrationView(generics.CreateAPIView):
@@ -106,3 +108,34 @@ class LogoutView(APIView):
 
 def health(request):
     return JsonResponse({"status": "ok"})
+
+class UserSearchView(generics.ListAPIView):
+    """
+    GET /users/?email=&first_name=&last_name=
+    Returns users matching any combination of provided query parameters.
+    """
+    serializer_class = UserDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = CustomUser.objects.all()
+        params = self.request.query_params
+
+        if 'email' in params:
+            qs = qs.filter(email__iexact=params['email'])
+        if 'first_name' in params:
+            qs = qs.filter(first_name__icontains=params['first_name'])
+        if 'last_name' in params:
+            qs = qs.filter(last_name__icontains=params['last_name'])
+
+        return qs
+
+class UserDetailView(generics.RetrieveUpdateAPIView):
+    """
+    GET  /users/<uuid:user_id>/    -> retrieve user details
+    PATCH /users/<uuid:user_id>/   -> update user details
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserDetailSerializer
+    queryset = CustomUser.objects.all()
+    lookup_field = 'id'
